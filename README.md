@@ -1,5 +1,4 @@
 
-
 ## ¿Qué es este proyecto?
 
 En la universidad, reconocer a alguien por una buena acción casi siempre se queda en un "gracias" que se dice de paso y se olvida. No queda registro, la persona no siempre se entera y mucho menos hay forma de volver a verlo después. UCO Kudos nace para resolver eso: es una plataforma donde un estudiante o un profesor le publica un Kudo (un reconocimiento corto, con archivos adjuntos si quiere) a otra persona de la comunidad.
@@ -1162,36 +1161,6 @@ Limitación: los archivos hoy los sirve la misma API. Con mucho tráfico lo corr
 
 ---
 
-## Decisiones de arquitectura (ADR)
-
-**ADR-01 Monolito modular.** Contexto: trabajo individual con pocos días y sin presupuesto. Decisión: una sola aplicación Spring Boot con paquetes separados por dominio. Alternativa: microservicios. Consecuencias: más fácil de desarrollar, desplegar y explicar; escala como una sola unidad, pero los módulos están separados para poder dividirlos después.
-
-**ADR-02 Arquitectura limpia (hexagonal).** Contexto: debe poder cambiarse de proveedor de correo o WhatsApp, y los casos de uso deben poder probarse sin base de datos. Decisión: dominio, aplicación e infraestructura separados, con puertos entre ellos. Alternativa: capas tradicionales donde el servicio usa directamente el repositorio y el proveedor. Consecuencias: hay más archivos, pero las pruebas unitarias son simples y cambiar un proveedor es cambiar una clase.
-
-**ADR-03 Java 21 con Spring Boot y Maven.** Contexto: necesito un framework con inyección de dependencias, persistencia, validación y pruebas, y debo poder explicarlo y modificarlo en vivo en la sustentación. Decisión: Java 21 con Spring Boot 3.3 y Maven; para el frontend, una PWA. Alternativas: NestJS con TypeScript (llegué a construir una primera versión) y Express sin estructura. Consecuencias: es la tecnología que mejor domino, así que puedo explicar cada parte y hacer cambios en vivo con más seguridad. Costó reescribir el backend, pero la arquitectura y los puertos se mantuvieron. Se requiere JDK 21.
-
-**ADR-04 Redis para caché y cola.** Contexto: necesito caché para las lecturas y una cola para las notificaciones. Decisión: un solo Redis, con una lista como cola y un procesador propio que la lee. Alternativas: Kafka o RabbitMQ. Consecuencias: menos piezas que montar y explicar. Limitación: una lista de Redis no tiene confirmación de entrega, así que si la aplicación se cae justo después de sacar un trabajo, ese trabajo se pierde (la auditoría deja ver qué canal no quedó registrado). Si el volumen o la exigencia crecen, se puede reemplazar por un broker como RabbitMQ gracias al puerto `PublicadorEventos`.
-
-**ADR-05 Notificaciones asíncronas, un trabajo por canal.** Contexto: enviar correo y WhatsApp es lento y puede fallar. Decisión: al publicar se crea un trabajo en la cola por cada canal, con 3 reintentos y espera creciente. Alternativa: enviar todo dentro de la misma petición. Consecuencias: la API responde rápido y un canal caído no afecta a los demás; la entrega es eventual y por eso la auditoría es importante.
-
-**ADR-06 PWA para el frontend.** Contexto: el 90% de los usuarios entra desde el celular. Decisión: una aplicación web instalable con React. Alternativa: app nativa. Consecuencias: un solo código para todos los dispositivos y sin tiendas de apps; algunas funciones nativas quedan limitadas.
-
-**ADR-07 Server-Sent Events para el push.** Contexto: el destinatario debe enterarse al instante si está conectado. Decisión: el navegador abre `GET /push/{usuarioId}` y el servidor le envía eventos; la aplicación guarda en memoria qué usuarios están conectados. Alternativas: WebSocket o Socket.IO, o consultar al servidor cada cierto tiempo. Consecuencias: llega al instante, el navegador lo soporta con `EventSource` y reconecta solo. Solo va del servidor al cliente, que es todo lo que necesita una notificación. Limitación: el mapa de conectados vive en memoria; con varias copias de la API habría que repartir los eventos por Redis.
-
-**ADR-08 Paginación por cursor.** Contexto: habrá muchas lecturas y listas largas. Decisión: el cursor es la fecha del último Kudo recibido. Alternativa: `OFFSET` y `LIMIT`. Consecuencias: mantiene el rendimiento con muchos registros; no permite saltar a una página arbitraria, algo que en un feed no hace falta.
-
-**ADR-09 Adjuntos en disco con metadatos en la base.** Contexto: los Kudos pueden llevar archivos, pero no quiero guardar binarios en la base. Decisión: los archivos van en una carpeta con nombre aleatorio y en la base solo nombre, tipo, tamaño y ruta. Alternativa: almacenamiento de objetos. Consecuencias: simple para esta entrega. En Azure Container Apps el disco del contenedor es temporal: si el contenedor se reinicia o se despliega una imagen nueva, los adjuntos guardados se pierden y quedan solo los datos en la base. Lo correcto a futuro es montar Azure Files o usar Blob Storage.
-
-**ADR-10 SonarCloud y Trivy en el pipeline.** Contexto: el enunciado exige análisis estático y de vulnerabilidades. Decisión: SonarCloud para el código y Trivy para dependencias e imagen Docker, ambos en el CI. Consecuencias: son las herramientas que pide el enunciado y tienen capa gratuita. Si fallan, el pipeline se detiene.
-
-**ADR-11 Azure Container Apps en vez de App Service.** Contexto: mi cuenta de Azure for Students solo permite cinco regiones y el plan B1 de App Service tenía cuota 0 en las que probé (pedí un aumento de cuota y no tuve respuesta a tiempo). Decisión: correr la API y Strapi como aplicaciones de Azure Container Apps, con la misma imagen de Docker que ya publicaba el pipeline. Alternativas: App Service, una máquina virtual o Azure Container Instances. Consecuencias: no necesita cuota especial y cobra solo por lo que usa. Dos cuidados que aprendí: el entorno tiene que crearse en modo "solo consumo" (los entornos Express que crea el portal por defecto no admiten referencias a Key Vault ni identidad del sistema) y el disco del contenedor es temporal (ver ADR-09).
-
-**ADR-12 Secretos en Azure Key Vault con referencias.** Contexto: las claves no pueden estar en el código ni en variables que se vean en texto plano. Decisión: guardar cada secreto en Key Vault y que el contenedor lo lea por referencia, usando su identidad del sistema con el rol "Key Vault Secrets User". Alternativas: variables de entorno directas en el contenedor o secretos de GitHub copiados a Azure. Consecuencias: rotar una clave es cambiar el secreto en un solo lugar; cuesta unos pasos más de configuración la primera vez.
-
-**ADR-13 Despliegue con credencial federada (OIDC).** Contexto: el CD necesita permiso para actualizar la imagen en Azure. Mi primer intento fue un service principal con clave secreta, pero el tenant lo rechazó con "Credential type not allowed as per assigned policy". Decisión: una aplicación registrada con credencial federada que confía en el entorno `produccion` de este repositorio, y `azure/login` con `client-id`, `tenant-id` y `subscription-id` (que son variables, no secretos). Alternativa: guardar una clave en GitHub. Consecuencias: GitHub no guarda ninguna clave de Azure. Un detalle: el token de GitHub trae el repositorio con sus identificadores numéricos (`RAMBBIT10@180295870/KUDOS@1454847854`), así que registré la credencial con ese `subject` exacto además del nombre normal.
-
----
-
 ## Pruebas
 
 Tengo muchas pruebas rápidas abajo, algunas de integración en el medio y pocas de extremo a extremo arriba.
@@ -1520,3 +1489,33 @@ Lo que puedo explicar sin ayuda:
 - Quitar las dependencias en los dos sentidos entre los módulos `compartido`, `kudos` y `cuentas`
 - Rotar las claves que usé durante el desarrollo (contraseña de aplicación de Gmail, token de Twilio, token de SonarCloud) y la clave de despliegue del frontend
 - Validar con otras personas los puntajes de prioridades y escenarios (secciones 3 y 4)
+
+---
+
+## Decisiones de arquitectura (ADR)
+
+**ADR-01 Monolito modular.** Contexto: trabajo individual con pocos días y sin presupuesto. Decisión: una sola aplicación Spring Boot con paquetes separados por dominio. Alternativa: microservicios. Consecuencias: más fácil de desarrollar, desplegar y explicar; escala como una sola unidad, pero los módulos están separados para poder dividirlos después.
+
+**ADR-02 Arquitectura limpia (hexagonal).** Contexto: debe poder cambiarse de proveedor de correo o WhatsApp, y los casos de uso deben poder probarse sin base de datos. Decisión: dominio, aplicación e infraestructura separados, con puertos entre ellos. Alternativa: capas tradicionales donde el servicio usa directamente el repositorio y el proveedor. Consecuencias: hay más archivos, pero las pruebas unitarias son simples y cambiar un proveedor es cambiar una clase.
+
+**ADR-03 Java 21 con Spring Boot y Maven.** Contexto: necesito un framework con inyección de dependencias, persistencia, validación y pruebas, y debo poder explicarlo y modificarlo en vivo en la sustentación. Decisión: Java 21 con Spring Boot 3.3 y Maven; para el frontend, una PWA. Alternativas: NestJS con TypeScript (llegué a construir una primera versión) y Express sin estructura. Consecuencias: es la tecnología que mejor domino, así que puedo explicar cada parte y hacer cambios en vivo con más seguridad. Costó reescribir el backend, pero la arquitectura y los puertos se mantuvieron. Se requiere JDK 21.
+
+**ADR-04 Redis para caché y cola.** Contexto: necesito caché para las lecturas y una cola para las notificaciones. Decisión: un solo Redis, con una lista como cola y un procesador propio que la lee. Alternativas: Kafka o RabbitMQ. Consecuencias: menos piezas que montar y explicar. Limitación: una lista de Redis no tiene confirmación de entrega, así que si la aplicación se cae justo después de sacar un trabajo, ese trabajo se pierde (la auditoría deja ver qué canal no quedó registrado). Si el volumen o la exigencia crecen, se puede reemplazar por un broker como RabbitMQ gracias al puerto `PublicadorEventos`.
+
+**ADR-05 Notificaciones asíncronas, un trabajo por canal.** Contexto: enviar correo y WhatsApp es lento y puede fallar. Decisión: al publicar se crea un trabajo en la cola por cada canal, con 3 reintentos y espera creciente. Alternativa: enviar todo dentro de la misma petición. Consecuencias: la API responde rápido y un canal caído no afecta a los demás; la entrega es eventual y por eso la auditoría es importante.
+
+**ADR-06 PWA para el frontend.** Contexto: el 90% de los usuarios entra desde el celular. Decisión: una aplicación web instalable con React. Alternativa: app nativa. Consecuencias: un solo código para todos los dispositivos y sin tiendas de apps; algunas funciones nativas quedan limitadas.
+
+**ADR-07 Server-Sent Events para el push.** Contexto: el destinatario debe enterarse al instante si está conectado. Decisión: el navegador abre `GET /push?token=...` y el servidor le envía eventos; la aplicación guarda en memoria qué usuarios están conectados. Alternativas: WebSocket o Socket.IO, o consultar al servidor cada cierto tiempo. Consecuencias: llega al instante, el navegador lo soporta con `EventSource` y reconecta solo. Solo va del servidor al cliente, que es todo lo que necesita una notificación. Limitación: el mapa de conectados vive en memoria; con varias copias de la API habría que repartir los eventos por Redis.
+
+**ADR-08 Paginación por cursor.** Contexto: habrá muchas lecturas y listas largas. Decisión: el cursor es la fecha del último Kudo recibido. Alternativa: `OFFSET` y `LIMIT`. Consecuencias: mantiene el rendimiento con muchos registros; no permite saltar a una página arbitraria, algo que en un feed no hace falta.
+
+**ADR-09 Adjuntos en disco con metadatos en la base.** Contexto: los Kudos pueden llevar archivos, pero no quiero guardar binarios en la base. Decisión: los archivos van en una carpeta con nombre aleatorio y en la base solo nombre, tipo, tamaño y ruta. Alternativa: almacenamiento de objetos. Consecuencias: simple para esta entrega. En Azure Container Apps el disco del contenedor es temporal: si el contenedor se reinicia o se despliega una imagen nueva, los adjuntos guardados se pierden y quedan solo los datos en la base. Lo correcto a futuro es montar Azure Files o usar Blob Storage.
+
+**ADR-10 SonarCloud y Trivy en el pipeline.** Contexto: el enunciado exige análisis estático y de vulnerabilidades. Decisión: SonarCloud para el código y Trivy para dependencias e imagen Docker, ambos en el CI. Consecuencias: son las herramientas que pide el enunciado y tienen capa gratuita. Si fallan, el pipeline se detiene.
+
+**ADR-11 Azure Container Apps en vez de App Service.** Contexto: mi cuenta de Azure for Students solo permite cinco regiones y el plan B1 de App Service tenía cuota 0 en las que probé (pedí un aumento de cuota y no tuve respuesta a tiempo). Decisión: correr la API y Strapi como aplicaciones de Azure Container Apps, con la misma imagen de Docker que ya publicaba el pipeline. Alternativas: App Service, una máquina virtual o Azure Container Instances. Consecuencias: no necesita cuota especial y cobra solo por lo que usa. Dos cuidados que aprendí: el entorno tiene que crearse en modo "solo consumo" (los entornos Express que crea el portal por defecto no admiten referencias a Key Vault ni identidad del sistema) y el disco del contenedor es temporal (ver ADR-09).
+
+**ADR-12 Secretos en Azure Key Vault con referencias.** Contexto: las claves no pueden estar en el código ni en variables que se vean en texto plano. Decisión: guardar cada secreto en Key Vault y que el contenedor lo lea por referencia, usando su identidad del sistema con el rol "Key Vault Secrets User". Alternativas: variables de entorno directas en el contenedor o secretos de GitHub copiados a Azure. Consecuencias: rotar una clave es cambiar el secreto en un solo lugar; cuesta unos pasos más de configuración la primera vez.
+
+**ADR-13 Despliegue con credencial federada (OIDC).** Contexto: el CD necesita permiso para actualizar la imagen en Azure. Mi primer intento fue un service principal con clave secreta, pero el tenant lo rechazó con "Credential type not allowed as per assigned policy". Decisión: una aplicación registrada con credencial federada que confía en el entorno `produccion` de este repositorio, y `azure/login` con `client-id`, `tenant-id` y `subscription-id` (que son variables, no secretos). Alternativa: guardar una clave en GitHub. Consecuencias: GitHub no guarda ninguna clave de Azure. Un detalle: el token de GitHub trae el repositorio con sus identificadores numéricos (`RAMBBIT10@180295870/KUDOS@1454847854`), así que registré la credencial con ese `subject` exacto además del nombre normal.
