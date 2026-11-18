@@ -921,9 +921,9 @@ Aquí van los diagramas de arquitectura. Cada uno tiene su espacio marcado con e
 
 Quién usa UCO Kudos y con qué sistemas de afuera se conecta. Las flechas punteadas son los avisos que le llegan a la persona.
 
-> **Espacio para el diagrama 1** (imagen `evidencias/diagramas/kudos-1.jpg`)
+> **Espacio para el diagrama 1** (imagen `evidencias/diagramas/C4-nivel-1.png`)
 
-<!-- Pegar aquí: ![Diagrama 1: Contexto](evidencias/diagramas/kudos-1.jpg) -->
+<!-- Pegar aquí: ![Diagrama 1: Contexto](evidencias/diagramas/C4-nivel-1.png) -->
 
 <br>
 
@@ -935,9 +935,9 @@ Quién usa UCO Kudos y con qué sistemas de afuera se conecta. Las flechas punte
 
 Las piezas que se despliegan en Azure y cómo se hablan. Los recuadros punteados de amarillo (WAF y API Gateway) todavía están pendientes; hoy la aplicación web habla directo con la API.
 
-> **Espacio para el diagrama 2** (imagen `evidencias/diagramas/kudos-2.jpg`)
+> **Espacio para el diagrama 2** (imagen `evidencias/diagramas/C4-nivel-2 .png`)
 
-<!-- Pegar aquí: ![Diagrama 2: Contenedores](evidencias/diagramas/kudos-2.jpg) -->
+<!-- Pegar aquí: ![Diagrama 2: Contenedores](evidencias/diagramas/C4-nivel-2%20.png) -->
 
 <br>
 
