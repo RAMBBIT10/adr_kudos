@@ -10,17 +10,6 @@ En el sistema existen tres roles de acceso:
 | Profesor | Exactamente lo mismo que el estudiante. La diferencia es solo el rol con el que se registra. |
 | Administrador | Lo mismo que los anteriores, más aprobar o rechazar solicitudes de cuenta. |
 
-### Tipos de personas que se tuvieron en cuenta
-
-Para priorizar la calidad pensé en cinco tipos de personas. Los usé después para repartir los puntos de cada atributo.
-
-| Tipo de persona | Cómo entra al sistema | Qué espera principalmente |
-|-----------------|-----------------------|---------------------------|
-| Estudiante | Como Estudiante | Publicar y recibir Kudos sin esfuerzo, desde el celular y con datos móviles. |
-| Docente | Como Profesor | Reconocer a sus estudiantes y enterarse rápido de lo que le llega. |
-| Coordinadores y directivos | Como Profesor o Administrador | Una plataforma confiable, segura y de la que quede rastro. |
-| Administrador del sistema | Como Administrador | Aprobar cuentas, mantener la aplicación viva y enterarse si algo falla. |
-| Evaluador (docente del curso) | Como Profesor | Entender el código y poder pedir cambios en vivo en la sustentación. |
 
 ---
 
