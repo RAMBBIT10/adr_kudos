@@ -915,35 +915,19 @@ Las rutas, los campos y los nombres de los canales salen de variables de entorno
 
 ## Diagramas
 
-Aquí van los diagramas de arquitectura. Cada uno tiene su espacio marcado con el nombre de la imagen que debe ir ahí.
+Aquí van los diagramas de arquitectura. Las imágenes están en la carpeta `evidencias/diagramas/`.
 
 ### Diagrama 1: Contexto
 
 Quién usa UCO Kudos y con qué sistemas de afuera se conecta. Las flechas punteadas son los avisos que le llegan a la persona.
 
-> **Espacio para el diagrama 1** (imagen `evidencias/diagramas/C4-nivel-1.png`)
-
-<!-- Pegar aquí: ![Diagrama 1: Contexto](evidencias/diagramas/C4-nivel-1.png) -->
-
-<br>
-
-<br>
-
-<br>
+![Diagrama 1: Contexto](evidencias/diagramas/C4-nivel-1.png)
 
 ### Diagrama 2: Contenedores
 
 Las piezas que se despliegan en Azure y cómo se hablan. Los recuadros punteados de amarillo (WAF y API Gateway) todavía están pendientes; hoy la aplicación web habla directo con la API.
 
-> **Espacio para el diagrama 2** (imagen `evidencias/diagramas/C4-nivel-2 .png`)
-
-<!-- Pegar aquí: ![Diagrama 2: Contenedores](evidencias/diagramas/C4-nivel-2%20.png) -->
-
-<br>
-
-<br>
-
-<br>
+![Diagrama 2: Contenedores](evidencias/diagramas/C4-nivel-2%20.png)
 
 ---
 
