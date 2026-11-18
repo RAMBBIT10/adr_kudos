@@ -1,4 +1,3 @@
-
 ## ¿Qué es este proyecto?
 
 En la universidad, reconocer a alguien por una buena acción casi siempre se queda en un "gracias" que se dice de paso y se olvida. No queda registro, la persona no siempre se entera y mucho menos hay forma de volver a verlo después. UCO Kudos nace para resolver eso: es una plataforma donde un estudiante o un profesor le publica un Kudo (un reconocimiento corto, con archivos adjuntos si quiere) a otra persona de la comunidad.
@@ -13,43 +12,6 @@ Este repositorio es el backend. Está construido con arquitectura limpia, con la
 
 Permitir que las personas de la comunidad universitaria se reconozcan entre sí publicando Kudos con adjuntos, y que quien lo recibe se entere por correo, por WhatsApp y en tiempo real, dejando un rastro auditable de todo lo ocurrido, con un diseño que se pueda explicar, probar y cambiar en una sustentación.
 
-### Objetivos específicos
-
-- Publicar un Kudo para otra persona, con mensaje y hasta cinco archivos adjuntos.
-- Avisar al destinatario por correo, por WhatsApp y por notificación en vivo (push) si está conectado.
-- Garantizar que un canal de aviso caído no impida publicar el Kudo ni afecte a los otros canales.
-- Registrar en una auditoría cada Kudo creado y el resultado de cada aviso.
-- Controlar quién entra: nadie usa la plataforma sin que el administrador apruebe su cuenta.
-- Mostrar los Kudos recibidos rápido y de forma paginada, pensando en quien entra desde el celular.
-- Mantener los textos y las plantillas fuera del código, y toda la configuración en variables de entorno.
-- Entregar el sistema desplegado en la nube, con pruebas automáticas, análisis estático y análisis de vulnerabilidades.
-
----
-
-## Alcance
-
-### Incluye
-
-- Solicitud de cuenta, aprobación o rechazo por parte del administrador, e ingreso con correo y clave.
-- Cambio de clave por parte de cada persona.
-- Publicación de Kudos con adjuntos validados por tipo, tamaño y cantidad.
-- Avisos por correo (Gmail), WhatsApp (sandbox de Twilio) y push en tiempo real (SSE).
-- Cola de notificaciones en Redis con reintentos, un trabajo por cada canal.
-- Lista de Kudos recibidos con caché y paginación por cursor.
-- Auditoría de Kudos y de avisos.
-- Textos y plantillas administrados desde Strapi.
-- Aplicación web instalable (PWA) pensada primero para el celular.
-- Despliegue en Azure con HTTPS, secretos en Key Vault y entrega continua desde GitHub Actions.
-
-### No incluye
-
-- Editar o borrar un Kudo ya publicado.
-- Responder a un Kudo (réplicas). El enunciado pide que no tengan límite de profundidad; esto quedó pendiente (ver Restricciones técnicas).
-- Recuperación de clave olvidada. La persona cambia la clave temporal desde dentro, pero no hay "olvidé mi clave".
-- Inicio de sesión institucional con Microsoft: no hay acceso al tenant de la universidad.
-- Métricas y alertas automáticas. Hoy hay un endpoint de salud y registros.
-- Almacenamiento permanente de adjuntos: hoy se guardan en el disco del contenedor y se pierden si este se reinicia.
-- API Management y WAF: están diseñados y justificados, pero todavía no están montados.
 
 ---
 
@@ -953,15 +915,15 @@ Las rutas, los campos y los nombres de los canales salen de variables de entorno
 
 ## Diagramas
 
-Aquí van los diagramas de arquitectura. Cada uno tiene su espacio marcado con el nombre de la imagen que debe ir ahí. Primero están los de arquitectura general (contexto y contenedores), luego los de componentes, los de paquetes y por último los de secuencia.
+Aquí van los diagramas de arquitectura. Cada uno tiene su espacio marcado con el nombre de la imagen que debe ir ahí.
 
 ### Diagrama 1: Contexto
 
 Quién usa UCO Kudos y con qué sistemas de afuera se conecta. Las flechas punteadas son los avisos que le llegan a la persona.
 
-> **Espacio para el diagrama 1** (imagen `evidencias/diagramas/1-contexto.png`)
+> **Espacio para el diagrama 1** (imagen `evidencias/diagramas/kudos-1.jpg`)
 
-<!-- Pegar aquí: ![Diagrama 1: Contexto](evidencias/diagramas/1-contexto.png) -->
+<!-- Pegar aquí: ![Diagrama 1: Contexto](evidencias/diagramas/kudos-1.jpg) -->
 
 <br>
 
@@ -973,135 +935,9 @@ Quién usa UCO Kudos y con qué sistemas de afuera se conecta. Las flechas punte
 
 Las piezas que se despliegan en Azure y cómo se hablan. Los recuadros punteados de amarillo (WAF y API Gateway) todavía están pendientes; hoy la aplicación web habla directo con la API.
 
-> **Espacio para el diagrama 2** (imagen `evidencias/diagramas/2-contenedores.png`)
+> **Espacio para el diagrama 2** (imagen `evidencias/diagramas/kudos-2.jpg`)
 
-<!-- Pegar aquí: ![Diagrama 2: Contenedores](evidencias/diagramas/2-contenedores.png) -->
-
-<br>
-
-<br>
-
-<br>
-
-### Diagrama 3: Componentes del backend: Kudos y notificaciones
-
-Se lee de izquierda a derecha: el controlador llama a un caso de uso, el caso de uso habla con un puerto (una interfaz) y un adaptador implementa ese puerto contra el servicio real. El procesador toma los trabajos de la cola y ejecuta `EnviarNotificacion`.
-
-> **Espacio para el diagrama 3** (imagen `evidencias/diagramas/3a-componentes-backend-kudos.png`)
-
-<!-- Pegar aquí: ![Diagrama 3: Componentes del backend: Kudos y notificaciones](evidencias/diagramas/3a-componentes-backend-kudos.png) -->
-
-<br>
-
-<br>
-
-<br>
-
-### Diagrama 4: Componentes del backend: cuentas y sesión
-
-Solicitud de cuenta, aprobación del administrador, ingreso y cambio de clave. Mismo patrón: casos de uso, puertos y adaptadores.
-
-> **Espacio para el diagrama 4** (imagen `evidencias/diagramas/3b-componentes-backend-cuentas.png`)
-
-<!-- Pegar aquí: ![Diagrama 4: Componentes del backend: cuentas y sesión](evidencias/diagramas/3b-componentes-backend-cuentas.png) -->
-
-<br>
-
-<br>
-
-<br>
-
-### Diagrama 5: Componentes del backend: catálogos
-
-Los textos de error y las plantillas de notificación no están en el código. Se piden a Strapi y se guardan en una caché corta.
-
-> **Espacio para el diagrama 5** (imagen `evidencias/diagramas/3c-componentes-backend-catalogos.png`)
-
-<!-- Pegar aquí: ![Diagrama 5: Componentes del backend: catálogos](evidencias/diagramas/3c-componentes-backend-catalogos.png) -->
-
-<br>
-
-<br>
-
-<br>
-
-### Diagrama 6: Componentes del frontend
-
-La aplicación web es una PWA en React. `App.jsx` decide qué pantalla mostrar y todos los componentes hablan con la API a través de `api.js`.
-
-> **Espacio para el diagrama 6** (imagen `evidencias/diagramas/4-componentes-frontend.png`)
-
-<!-- Pegar aquí: ![Diagrama 6: Componentes del frontend](evidencias/diagramas/4-componentes-frontend.png) -->
-
-<br>
-
-<br>
-
-<br>
-
-### Diagrama 7: Paquetes del backend: capas dentro de cada módulo
-
-Esta es la regla de dependencia de la arquitectura limpia, y se cumple dentro de cada módulo: la infraestructura conoce a la aplicación, la aplicación conoce al dominio y el dominio no conoce a nadie.
-
-> **Espacio para el diagrama 7** (imagen `evidencias/diagramas/5a-paquetes-capas.png`)
-
-<!-- Pegar aquí: ![Diagrama 7: Paquetes del backend: capas dentro de cada módulo](evidencias/diagramas/5a-paquetes-capas.png) -->
-
-<br>
-
-<br>
-
-<br>
-
-### Diagrama 8: Paquetes del backend: módulos
-
-Cómo se apuntan entre sí los módulos. Hay algunas dependencias en los dos sentidos (por ejemplo, `compartido` y `kudos`), porque `compartido` arma la configuración y el manejo de errores de todos. Lo dejo dibujado tal como está y lo anoto como mejora en los pendientes.
-
-> **Espacio para el diagrama 8** (imagen `evidencias/diagramas/5b-paquetes-modulos-backend.png`)
-
-<!-- Pegar aquí: ![Diagrama 8: Paquetes del backend: módulos](evidencias/diagramas/5b-paquetes-modulos-backend.png) -->
-
-<br>
-
-<br>
-
-<br>
-
-### Diagrama 9: Paquetes del frontend
-
-Es una aplicación pequeña: un punto de entrada, la pantalla principal, los componentes y un solo archivo que habla con la API.
-
-> **Espacio para el diagrama 9** (imagen `evidencias/diagramas/6-paquetes-frontend.png`)
-
-<!-- Pegar aquí: ![Diagrama 9: Paquetes del frontend](evidencias/diagramas/6-paquetes-frontend.png) -->
-
-<br>
-
-<br>
-
-<br>
-
-### Diagrama 10: Secuencia: publicar un Kudo
-
-El flujo principal del proyecto. Lo que está arriba del `loop` ocurre antes de responder al usuario; lo de abajo pasa por la cola, un trabajo por canal.
-
-> **Espacio para el diagrama 10** (imagen `evidencias/diagramas/7-secuencia-publicar-kudo.png`)
-
-<!-- Pegar aquí: ![Diagrama 10: Secuencia: publicar un Kudo](evidencias/diagramas/7-secuencia-publicar-kudo.png) -->
-
-<br>
-
-<br>
-
-<br>
-
-### Diagrama 11: Secuencia: solicitar y aprobar una cuenta
-
-Nadie entra sin que el administrador lo apruebe. La clave temporal llega por correo y por WhatsApp.
-
-> **Espacio para el diagrama 11** (imagen `evidencias/diagramas/8-secuencia-cuentas.png`)
-
-<!-- Pegar aquí: ![Diagrama 11: Secuencia: solicitar y aprobar una cuenta](evidencias/diagramas/8-secuencia-cuentas.png) -->
+<!-- Pegar aquí: ![Diagrama 2: Contenedores](evidencias/diagramas/kudos-2.jpg) -->
 
 <br>
 
