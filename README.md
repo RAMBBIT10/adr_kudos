@@ -1,19 +1,4 @@
-## ¿Qué es este proyecto?
 
-En la universidad, reconocer a alguien por una buena acción casi siempre se queda en un "gracias" que se dice de paso y se olvida. No queda registro, la persona no siempre se entera y mucho menos hay forma de volver a verlo después. UCO Kudos nace para resolver eso: es una plataforma donde un estudiante o un profesor le publica un Kudo (un reconocimiento corto, con archivos adjuntos si quiere) a otra persona de la comunidad.
-
-Lo importante es lo que pasa cuando se publica. El Kudo se guarda, le llega un correo a quien lo recibe, le llega un mensaje de WhatsApp y, si en ese momento tiene la aplicación abierta, le aparece al instante en pantalla. Además, todo queda auditado: se puede saber qué Kudo se publicó y qué pasó con cada aviso, incluso cuando uno de los canales falló.
-
-Este repositorio es el backend. Está construido con arquitectura limpia, con las decisiones de diseño justificadas, desplegado en Azure con HTTPS y con un pipeline que prueba, analiza y despliega solo. Este documento cuenta todo el proceso: qué se pidió, qué se priorizó, cómo se diseñó, cómo se probó y qué quedó pendiente.
-
----
-
-## Objetivo del sistema
-
-Permitir que las personas de la comunidad universitaria se reconozcan entre sí publicando Kudos con adjuntos, y que quien lo recibe se entere por correo, por WhatsApp y en tiempo real, dejando un rastro auditable de todo lo ocurrido, con un diseño que se pueda explicar, probar y cambiar en una sustentación.
-
-
----
 
 ## Usuarios del sistema
 
